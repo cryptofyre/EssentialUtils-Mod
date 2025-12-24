@@ -9,9 +9,12 @@ import net.ppekkungz.essentialUtils.config.PluginConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Tab Menu Service - Displays a stylized player list header and footer.
- * Features an animated logo and server info.
+ * Features an animated logo and server info. Highly configurable.
  * Folia-compatible using global region scheduler.
  */
 public class TabMenuService {
@@ -21,7 +24,7 @@ public class TabMenuService {
     private ScheduledTask updateTask;
     private int animationFrame = 0;
     
-    // Animation color gradient frames for logo
+    // Animation color gradient frames
     private static final TextColor[] GRADIENT_COLORS = {
         TextColor.color(0xFF6B6B), // Coral red
         TextColor.color(0xFFA07A), // Light salmon
@@ -33,18 +36,16 @@ public class TabMenuService {
         TextColor.color(0xFF6B6B), // Back to coral
     };
     
-    // Secondary accent colors for the theme
-    private static final TextColor CIDER_GOLD = TextColor.color(0xF4A460);
-    private static final TextColor LEAF_GREEN = TextColor.color(0x28A745);
-    
-    // UI accent colors
+    // Theme colors
+    private static final TextColor ACCENT_GOLD = TextColor.color(0xF4A460);
+    private static final TextColor ACCENT_GREEN = TextColor.color(0x28A745);
     private static final TextColor ACCENT_LIGHT = TextColor.color(0xDFE6E9);
-    private static final TextColor PING_GOOD = TextColor.color(0x00FF7F);
-    private static final TextColor PING_MED = TextColor.color(0xFFD700);
-    private static final TextColor PING_BAD = TextColor.color(0xFF4500);
-    private static final TextColor TPS_GOOD = TextColor.color(0x00FF7F);
-    private static final TextColor TPS_MED = TextColor.color(0xFFD700);
-    private static final TextColor TPS_BAD = TextColor.color(0xFF4500);
+    private static final TextColor ACCENT_DARK = TextColor.color(0x636E72);
+    
+    // Status colors
+    private static final TextColor STATUS_GOOD = TextColor.color(0x00FF7F);
+    private static final TextColor STATUS_MED = TextColor.color(0xFFD700);
+    private static final TextColor STATUS_BAD = TextColor.color(0xFF4500);
     
     public TabMenuService(EssentialUtils plugin, PluginConfig cfg) {
         this.plugin = plugin;
@@ -64,7 +65,7 @@ public class TabMenuService {
         updateTask = plugin.getServer().getGlobalRegionScheduler().runAtFixedRate(
             plugin,
             task -> updateAllPlayers(),
-            20L, // Initial delay
+            20L,
             updateInterval
         );
     }
@@ -93,38 +94,53 @@ public class TabMenuService {
     }
     
     /**
-     * Build the animated header with Cider Collective logo.
+     * Build the header with animated logo.
      */
     private Component buildHeader() {
         Component header = Component.empty();
         
-        // Top decorative line
-        header = header.append(Component.newline());
-        header = header.append(buildDecorativeLine());
-        header = header.append(Component.newline());
+        // Top decoration
+        if (cfg.tabMenuShowDecorations()) {
+            header = header.append(Component.newline());
+            header = header.append(buildDecorativeLine());
+        }
         header = header.append(Component.newline());
         
-        // Animated "Cider Collective" logo
+        // Animated logo
         header = header.append(buildAnimatedLogo());
         header = header.append(Component.newline());
         
-        // Apple/cider decoration
-        header = header.append(buildAppleDecoration());
-        header = header.append(Component.newline());
-        header = header.append(Component.newline());
+        // Optional tagline
+        String tagline = cfg.tabMenuHeaderTagline();
+        if (!tagline.isEmpty()) {
+            header = header.append(
+                Component.text(tagline, ACCENT_DARK).decorate(TextDecoration.ITALIC)
+            );
+            header = header.append(Component.newline());
+        }
         
         // Server IP
         String serverIp = cfg.tabMenuServerIp();
-        header = header.append(
-            Component.text("✦ ", CIDER_GOLD)
-                .append(Component.text(serverIp, ACCENT_LIGHT).decorate(TextDecoration.BOLD))
-                .append(Component.text(" ✦", CIDER_GOLD))
-        );
-        header = header.append(Component.newline());
+        if (!serverIp.isEmpty()) {
+            if (cfg.tabMenuShowDecorations()) {
+                header = header.append(
+                    Component.text("✦ ", ACCENT_GOLD)
+                        .append(Component.text(serverIp, ACCENT_LIGHT).decorate(TextDecoration.BOLD))
+                        .append(Component.text(" ✦", ACCENT_GOLD))
+                );
+            } else {
+                header = header.append(
+                    Component.text(serverIp, ACCENT_LIGHT).decorate(TextDecoration.BOLD)
+                );
+            }
+            header = header.append(Component.newline());
+        }
         
-        // Bottom decorative line
-        header = header.append(buildDecorativeLine());
-        header = header.append(Component.newline());
+        // Bottom decoration
+        if (cfg.tabMenuShowDecorations()) {
+            header = header.append(buildDecorativeLine());
+            header = header.append(Component.newline());
+        }
         
         return header;
     }
@@ -133,7 +149,9 @@ public class TabMenuService {
      * Build the animated logo with flowing gradient.
      */
     private Component buildAnimatedLogo() {
-        String logoText = "CIDER COLLECTIVE";
+        String logoText = cfg.tabMenuLogoText();
+        if (logoText.isEmpty()) return Component.empty();
+        
         Component logo = Component.empty();
         
         for (int i = 0; i < logoText.length(); i++) {
@@ -172,35 +190,20 @@ public class TabMenuService {
     }
     
     /**
-     * Build apple/cider themed decoration.
-     */
-    private Component buildAppleDecoration() {
-        // Animated apple that "glows"
-        float pulse = (float) Math.sin(animationFrame / 4.0) * 0.5f + 0.5f;
-        int redValue = (int) (180 + pulse * 75);
-        TextColor appleColor = TextColor.color(redValue, 50, 60);
-        
-        return Component.text("🍎", appleColor)
-            .append(Component.text(" ━━━ ", TextColor.color(0x636E72)))
-            .append(Component.text("☕", CIDER_GOLD))
-            .append(Component.text(" ━━━ ", TextColor.color(0x636E72)))
-            .append(Component.text("🍎", appleColor));
-    }
-    
-    /**
      * Build decorative line separator.
      */
     private Component buildDecorativeLine() {
-        Component line = Component.empty();
-        String pattern = "═══════════════════════════";
+        String style = cfg.tabMenuDecorationStyle();
+        int length = cfg.tabMenuDecorationLength();
         
-        for (int i = 0; i < pattern.length(); i++) {
-            float phase = (animationFrame / 16.0f + i / (float) pattern.length()) % 1.0f;
-            // Subtle shimmer effect
+        Component line = Component.empty();
+        
+        for (int i = 0; i < length; i++) {
+            float phase = (animationFrame / 16.0f + i / (float) length) % 1.0f;
             int brightness = (int) (60 + Math.sin(phase * Math.PI * 2) * 20);
             TextColor color = TextColor.color(brightness + 40, brightness + 50, brightness + 60);
             
-            line = line.append(Component.text(String.valueOf(pattern.charAt(i)), color));
+            line = line.append(Component.text(style, color));
         }
         
         return line;
@@ -211,117 +214,196 @@ public class TabMenuService {
      */
     private Component buildFooter(Player player) {
         Component footer = Component.empty();
+        boolean compact = cfg.tabMenuCompactMode();
         
-        footer = footer.append(Component.newline());
-        footer = footer.append(buildDecorativeLine());
-        footer = footer.append(Component.newline());
-        footer = footer.append(Component.newline());
-        
-        // Player count
-        int online = Bukkit.getOnlinePlayers().size();
-        int max = Bukkit.getMaxPlayers();
-        footer = footer.append(
-            Component.text("👥 ", LEAF_GREEN)
-                .append(Component.text("Players: ", ACCENT_LIGHT))
-                .append(Component.text(online, CIDER_GOLD).decorate(TextDecoration.BOLD))
-                .append(Component.text("/", TextColor.color(0x636E72)))
-                .append(Component.text(max, ACCENT_LIGHT))
-        );
-        footer = footer.append(Component.newline());
-        
-        // Ping
-        int ping = player.getPing();
-        TextColor pingColor = ping < 50 ? PING_GOOD : (ping < 150 ? PING_MED : PING_BAD);
-        String pingIcon = ping < 50 ? "📶" : (ping < 150 ? "📶" : "📶");
-        footer = footer.append(
-            Component.text(pingIcon + " ", pingColor)
-                .append(Component.text("Ping: ", ACCENT_LIGHT))
-                .append(Component.text(ping + "ms", pingColor).decorate(TextDecoration.BOLD))
-        );
-        footer = footer.append(Component.newline());
-        
-        // TPS
-        double tps = getTPS();
-        TextColor tpsColor = tps >= 19.0 ? TPS_GOOD : (tps >= 15.0 ? TPS_MED : TPS_BAD);
-        String tpsIcon = tps >= 19.0 ? "⚡" : (tps >= 15.0 ? "⚡" : "⚡");
-        footer = footer.append(
-            Component.text(tpsIcon + " ", tpsColor)
-                .append(Component.text("TPS: ", ACCENT_LIGHT))
-                .append(Component.text(String.format("%.1f", tps), tpsColor).decorate(TextDecoration.BOLD))
-        );
-        footer = footer.append(Component.newline());
-        
-        // Memory usage (optional, nice to have)
-        if (cfg.tabMenuShowMemory()) {
-            Runtime runtime = Runtime.getRuntime();
-            long usedMB = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
-            long maxMB = runtime.maxMemory() / (1024 * 1024);
-            double memPercent = (double) usedMB / maxMB;
-            TextColor memColor = memPercent < 0.7 ? TPS_GOOD : (memPercent < 0.9 ? TPS_MED : TPS_BAD);
-            
-            footer = footer.append(
-                Component.text("💾 ", memColor)
-                    .append(Component.text("Memory: ", ACCENT_LIGHT))
-                    .append(Component.text(usedMB + "MB", memColor).decorate(TextDecoration.BOLD))
-                    .append(Component.text("/", TextColor.color(0x636E72)))
-                    .append(Component.text(maxMB + "MB", ACCENT_LIGHT))
-            );
+        // Top decoration
+        if (cfg.tabMenuShowDecorations()) {
             footer = footer.append(Component.newline());
+            footer = footer.append(buildDecorativeLine());
+        }
+        footer = footer.append(Component.newline());
+        
+        if (compact) {
+            footer = footer.append(buildCompactStats(player));
+        } else {
+            footer = footer.append(buildExpandedStats(player));
         }
         
-        footer = footer.append(Component.newline());
-        
-        // Chunk loader info (if enabled)
+        // Chunk info
         if (cfg.chunkLoaderEnabled() && cfg.tabMenuShowChunkInfo()) {
             var chunkLoader = plugin.chunkLoader();
             if (chunkLoader != null) {
                 int claimed = chunkLoader.getClaimedCount(player);
                 int maxChunks = chunkLoader.getMaxChunks();
                 footer = footer.append(
-                    Component.text("📦 ", CIDER_GOLD)
-                        .append(Component.text("Chunks: ", ACCENT_LIGHT))
-                        .append(Component.text(claimed, LEAF_GREEN).decorate(TextDecoration.BOLD))
-                        .append(Component.text("/", TextColor.color(0x636E72)))
-                        .append(Component.text(maxChunks, ACCENT_LIGHT))
+                    Component.text("📦 ", ACCENT_GOLD)
+                        .append(Component.text(claimed, ACCENT_GREEN).decorate(TextDecoration.BOLD))
+                        .append(Component.text("/" + maxChunks, ACCENT_DARK))
                 );
-                footer = footer.append(Component.newline());
                 footer = footer.append(Component.newline());
             }
         }
         
         // Footer tagline
-        footer = footer.append(
-            Component.text("☕ ", CIDER_GOLD)
-                .append(Component.text("Fresh from the orchard", TextColor.color(0xB2BEC3)).decorate(TextDecoration.ITALIC))
-                .append(Component.text(" ☕", CIDER_GOLD))
-        );
-        footer = footer.append(Component.newline());
-        footer = footer.append(buildDecorativeLine());
-        footer = footer.append(Component.newline());
+        String tagline = cfg.tabMenuFooterTagline();
+        if (!tagline.isEmpty()) {
+            footer = footer.append(
+                Component.text(tagline, ACCENT_DARK).decorate(TextDecoration.ITALIC)
+            );
+            footer = footer.append(Component.newline());
+        }
+        
+        // Bottom decoration
+        if (cfg.tabMenuShowDecorations()) {
+            footer = footer.append(buildDecorativeLine());
+            footer = footer.append(Component.newline());
+        }
         
         return footer;
     }
     
     /**
+     * Build compact stats (single line).
+     */
+    private Component buildCompactStats(Player player) {
+        List<Component> parts = new ArrayList<>();
+        
+        // Players
+        if (cfg.tabMenuShowPlayers()) {
+            int online = Bukkit.getOnlinePlayers().size();
+            int max = Bukkit.getMaxPlayers();
+            parts.add(
+                Component.text("👥 ", ACCENT_GREEN)
+                    .append(Component.text(online, ACCENT_GOLD).decorate(TextDecoration.BOLD))
+                    .append(Component.text("/" + max, ACCENT_DARK))
+            );
+        }
+        
+        // Ping
+        if (cfg.tabMenuShowPing()) {
+            int ping = player.getPing();
+            TextColor pingColor = ping < 50 ? STATUS_GOOD : (ping < 150 ? STATUS_MED : STATUS_BAD);
+            parts.add(
+                Component.text("📶 ", pingColor)
+                    .append(Component.text(ping + "ms", pingColor).decorate(TextDecoration.BOLD))
+            );
+        }
+        
+        // TPS
+        if (cfg.tabMenuShowTps()) {
+            double tps = getTPS();
+            TextColor tpsColor = tps >= 19.0 ? STATUS_GOOD : (tps >= 15.0 ? STATUS_MED : STATUS_BAD);
+            parts.add(
+                Component.text("⚡ ", tpsColor)
+                    .append(Component.text(String.format("%.0f", tps), tpsColor).decorate(TextDecoration.BOLD))
+            );
+        }
+        
+        // Memory
+        if (cfg.tabMenuShowMemory()) {
+            Runtime runtime = Runtime.getRuntime();
+            long usedMB = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
+            long maxMB = runtime.maxMemory() / (1024 * 1024);
+            double memPercent = (double) usedMB / maxMB;
+            TextColor memColor = memPercent < 0.7 ? STATUS_GOOD : (memPercent < 0.9 ? STATUS_MED : STATUS_BAD);
+            parts.add(
+                Component.text("💾 ", memColor)
+                    .append(Component.text(usedMB + "MB", memColor).decorate(TextDecoration.BOLD))
+            );
+        }
+        
+        // Join with separators
+        Component result = Component.empty();
+        for (int i = 0; i < parts.size(); i++) {
+            if (i > 0) {
+                result = result.append(Component.text("  ", ACCENT_DARK));
+            }
+            result = result.append(parts.get(i));
+        }
+        result = result.append(Component.newline());
+        
+        return result;
+    }
+    
+    /**
+     * Build expanded stats (multiple lines).
+     */
+    private Component buildExpandedStats(Player player) {
+        Component stats = Component.empty();
+        
+        // Players
+        if (cfg.tabMenuShowPlayers()) {
+            int online = Bukkit.getOnlinePlayers().size();
+            int max = Bukkit.getMaxPlayers();
+            stats = stats.append(
+                Component.text("👥 ", ACCENT_GREEN)
+                    .append(Component.text("Players: ", ACCENT_LIGHT))
+                    .append(Component.text(online, ACCENT_GOLD).decorate(TextDecoration.BOLD))
+                    .append(Component.text("/" + max, ACCENT_DARK))
+            );
+            stats = stats.append(Component.newline());
+        }
+        
+        // Ping
+        if (cfg.tabMenuShowPing()) {
+            int ping = player.getPing();
+            TextColor pingColor = ping < 50 ? STATUS_GOOD : (ping < 150 ? STATUS_MED : STATUS_BAD);
+            stats = stats.append(
+                Component.text("📶 ", pingColor)
+                    .append(Component.text("Ping: ", ACCENT_LIGHT))
+                    .append(Component.text(ping + "ms", pingColor).decorate(TextDecoration.BOLD))
+            );
+            stats = stats.append(Component.newline());
+        }
+        
+        // TPS
+        if (cfg.tabMenuShowTps()) {
+            double tps = getTPS();
+            TextColor tpsColor = tps >= 19.0 ? STATUS_GOOD : (tps >= 15.0 ? STATUS_MED : STATUS_BAD);
+            stats = stats.append(
+                Component.text("⚡ ", tpsColor)
+                    .append(Component.text("TPS: ", ACCENT_LIGHT))
+                    .append(Component.text(String.format("%.1f", tps), tpsColor).decorate(TextDecoration.BOLD))
+            );
+            stats = stats.append(Component.newline());
+        }
+        
+        // Memory
+        if (cfg.tabMenuShowMemory()) {
+            Runtime runtime = Runtime.getRuntime();
+            long usedMB = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
+            long maxMB = runtime.maxMemory() / (1024 * 1024);
+            double memPercent = (double) usedMB / maxMB;
+            TextColor memColor = memPercent < 0.7 ? STATUS_GOOD : (memPercent < 0.9 ? STATUS_MED : STATUS_BAD);
+            stats = stats.append(
+                Component.text("💾 ", memColor)
+                    .append(Component.text("Memory: ", ACCENT_LIGHT))
+                    .append(Component.text(usedMB + "MB", memColor).decorate(TextDecoration.BOLD))
+                    .append(Component.text("/" + maxMB + "MB", ACCENT_DARK))
+            );
+            stats = stats.append(Component.newline());
+        }
+        
+        return stats;
+    }
+    
+    /**
      * Get current server TPS.
-     * Folia-compatible - uses Paper's TPS API.
      */
     private double getTPS() {
         try {
-            // Paper API for TPS
             double[] tps = Bukkit.getTPS();
-            return Math.min(20.0, tps[0]); // 1-minute average, capped at 20
+            return Math.min(20.0, tps[0]);
         } catch (Exception e) {
-            return 20.0; // Default if unavailable
+            return 20.0;
         }
     }
     
     /**
-     * Called when a player joins - set their initial tab.
+     * Called when a player joins.
      */
     public void onPlayerJoin(Player player) {
         if (cfg.tabMenuEnabled()) {
-            // Delay slightly to ensure player is fully loaded
             player.getScheduler().runDelayed(plugin, task -> {
                 updatePlayer(player);
             }, null, 5L);
@@ -336,10 +418,8 @@ public class TabMenuService {
             updateTask.cancel();
         }
         
-        // Clear tab menus for all players
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.sendPlayerListHeaderAndFooter(Component.empty(), Component.empty());
         }
     }
 }
-

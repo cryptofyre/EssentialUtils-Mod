@@ -46,10 +46,26 @@ actionbar:
 # Tab Menu Configuration (Player List Header/Footer)
 tabMenu:
   enabled: true
-  serverIp: "play.cidercollective.net"  # Your server IP
-  updateInterval: 4         # Ticks between updates (lower = smoother animation, more CPU)
-  showMemory: false         # Show memory usage in footer
-  showChunkInfo: true       # Show player's claimed chunks
+  updateInterval: 4           # Ticks between updates (lower = smoother, more CPU)
+  
+  # Header settings
+  header:
+    logoText: "Cider Collective"  # Your server/network name (animated gradient)
+    serverIp: "nano.mc.cider.sh"
+    tagline: ""                   # Optional tagline below logo (leave empty to hide)
+    showDecorations: true         # Show decorative lines and icons
+    decorationStyle: "═"          # Character for decorative lines
+    decorationLength: 10          # Length of decorative lines
+  
+  # Footer settings  
+  footer:
+    showPlayers: true             # Show online/max players
+    showPing: true                # Show player's ping
+    showTps: true                 # Show server TPS
+    showMemory: false             # Show memory usage
+    showChunkInfo: true           # Show player's claimed chunks
+    tagline: ""                   # Optional footer tagline (leave empty to hide)
+    compactMode: true             # Combine stats on fewer lines
 
 performance:
   blocksPerTick: 32         # Max blocks processed per tick per player

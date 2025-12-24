@@ -131,17 +131,51 @@ public class PluginConfig {
     public void setTabMenuEnabled(boolean enabled) {
         c.set("tabMenu.enabled", enabled);
     }
-    public String tabMenuServerIp() { 
-        return c.getString("tabMenu.serverIp", "play.cidercollective.net"); 
-    }
     public int tabMenuUpdateInterval() { 
         return c.getInt("tabMenu.updateInterval", 4); 
     }
+    
+    // Header
+    public String tabMenuLogoText() { 
+        return c.getString("tabMenu.header.logoText", "CIDER COLLECTIVE"); 
+    }
+    public String tabMenuServerIp() { 
+        return c.getString("tabMenu.header.serverIp", "play.cidercollective.net"); 
+    }
+    public String tabMenuHeaderTagline() { 
+        return c.getString("tabMenu.header.tagline", ""); 
+    }
+    public boolean tabMenuShowDecorations() { 
+        return c.getBoolean("tabMenu.header.showDecorations", true); 
+    }
+    public String tabMenuDecorationStyle() { 
+        return c.getString("tabMenu.header.decorationStyle", "═"); 
+    }
+    public int tabMenuDecorationLength() { 
+        return c.getInt("tabMenu.header.decorationLength", 20); 
+    }
+    
+    // Footer
+    public boolean tabMenuShowPlayers() { 
+        return c.getBoolean("tabMenu.footer.showPlayers", true); 
+    }
+    public boolean tabMenuShowPing() { 
+        return c.getBoolean("tabMenu.footer.showPing", true); 
+    }
+    public boolean tabMenuShowTps() { 
+        return c.getBoolean("tabMenu.footer.showTps", true); 
+    }
     public boolean tabMenuShowMemory() { 
-        return c.getBoolean("tabMenu.showMemory", false); 
+        return c.getBoolean("tabMenu.footer.showMemory", false); 
     }
     public boolean tabMenuShowChunkInfo() { 
-        return c.getBoolean("tabMenu.showChunkInfo", true); 
+        return c.getBoolean("tabMenu.footer.showChunkInfo", true); 
+    }
+    public String tabMenuFooterTagline() { 
+        return c.getString("tabMenu.footer.tagline", ""); 
+    }
+    public boolean tabMenuCompactMode() { 
+        return c.getBoolean("tabMenu.footer.compactMode", true); 
     }
 
     // ==================== PERFORMANCE ====================
