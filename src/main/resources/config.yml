@@ -18,6 +18,13 @@ modules:
     enabled: true
     radius: 4               # Harvest radius around broken crop
     autoReplant: true       # Replant seeds after harvest
+  
+  chunkLoader:
+    enabled: true
+    maxChunksPerPlayer: 9   # Maximum chunks each player can claim (3x3 area)
+    validationInterval: 300 # Seconds between chunk validation checks
+    claimOnFarm: true       # Auto-claim chunks when using AutoFarm while sneaking
+    # claims: (auto-populated, don't edit)
 
 actionbar:
   treeFeller:
@@ -30,6 +37,19 @@ actionbar:
     showSummary: true
     summaryDuration: 40     # Ticks (2 seconds)
     summaryFormat: "&b⛏ &ex{count} {ore} &7| &f{drops} &7({mult}) &7| &a{xp} XP"
+  
+  chunkLoader:
+    showClaimMessage: true
+    claimMessage: "&a📦 Chunk claimed! &7({current}/{max})"
+    unclaimMessage: "&e📦 Chunk unclaimed."
+
+# Tab Menu Configuration (Player List Header/Footer)
+tabMenu:
+  enabled: true
+  serverIp: "play.cidercollective.net"  # Your server IP
+  updateInterval: 4         # Ticks between updates (lower = smoother animation, more CPU)
+  showMemory: false         # Show memory usage in footer
+  showChunkInfo: true       # Show player's claimed chunks
 
 performance:
   blocksPerTick: 32         # Max blocks processed per tick per player

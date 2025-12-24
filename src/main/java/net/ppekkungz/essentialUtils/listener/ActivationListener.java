@@ -2,10 +2,12 @@ package net.ppekkungz.essentialUtils.listener;
 
 import net.ppekkungz.essentialUtils.EssentialUtils;
 import net.ppekkungz.essentialUtils.config.PluginConfig;
+import net.ppekkungz.essentialUtils.features.chunkloader.ChunkLoaderFeature;
 import net.ppekkungz.essentialUtils.features.farm.AutoFarmFeature;
 import net.ppekkungz.essentialUtils.features.tree.TreeAssistFeature;
 import net.ppekkungz.essentialUtils.features.vein.VeinMineFeature;
 import net.ppekkungz.essentialUtils.indicator.ActionBarService;
+import net.ppekkungz.essentialUtils.indicator.TabMenuService;
 import net.ppekkungz.essentialUtils.state.PlayerState;
 import net.ppekkungz.essentialUtils.state.StateManager;
 import net.ppekkungz.essentialUtils.util.Materials;
@@ -19,6 +21,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
@@ -32,6 +35,7 @@ import java.util.Set;
  * - Tree Feller: Crouch + break with axe
  * - VeinMiner: Break ore with pickaxe (always active)
  * - AutoFarm: Break crop with hoe (always active)
+ * - Chunk Loader: Crouch + break crop with hoe to claim chunk
  */
 public class ActivationListener implements Listener {
     private final EssentialUtils plugin;
@@ -39,18 +43,23 @@ public class ActivationListener implements Listener {
     private final StateManager states;
     private final WorkService work;
     private final ActionBarService actionBar;
+    private final ChunkLoaderFeature chunkLoader;
+    private final TabMenuService tabMenu;
 
     private final TreeAssistFeature tree;
     private final VeinMineFeature vein;
     private final AutoFarmFeature farm;
 
     public ActivationListener(EssentialUtils plugin, PluginConfig cfg, StateManager states, 
-                              WorkService work, ActionBarService actionBar) {
+                              WorkService work, ActionBarService actionBar,
+                              ChunkLoaderFeature chunkLoader, TabMenuService tabMenu) {
         this.plugin = plugin;
         this.cfg = cfg;
         this.states = states;
         this.work = work;
         this.actionBar = actionBar;
+        this.chunkLoader = chunkLoader;
+        this.tabMenu = tabMenu;
 
         this.tree = new TreeAssistFeature(cfg);
         this.vein = new VeinMineFeature(cfg);
@@ -69,6 +78,18 @@ public class ActivationListener implements Listener {
     
     private boolean isHoe(ItemStack it) { 
         return it != null && it.getType().name().endsWith("_HOE"); 
+    }
+
+    // ==================== PLAYER JOIN/QUIT ====================
+
+    @EventHandler
+    public void onJoin(PlayerJoinEvent e) {
+        Player p = e.getPlayer();
+        
+        // Initialize tab menu for joining player
+        if (tabMenu != null) {
+            tabMenu.onPlayerJoin(p);
+        }
     }
 
     // ==================== SNEAK HANDLING (Tree Feller Indicator) ====================
@@ -123,6 +144,11 @@ public class ActivationListener implements Listener {
         // Try AutoFarm (always active with hoe)
         if (cfg.autoFarmEnabled() && isHoe(hand)) {
             if (farm.canTrigger(p, b)) {
+                // Check for chunk claim while sneaking
+                if (p.isSneaking() && cfg.chunkLoaderEnabled() && cfg.chunkLoaderClaimOnFarm()) {
+                    handleChunkClaim(p, b);
+                }
+                
                 handleAutoFarm(p, b, e);
                 return;
             }
@@ -233,6 +259,31 @@ public class ActivationListener implements Listener {
         }
         
         work.ensureLoop(p);
+    }
+
+    /**
+     * Handle chunk claim when sneaking + farming.
+     */
+    private void handleChunkClaim(Player p, Block origin) {
+        if (chunkLoader == null) return;
+        
+        // Try to claim the chunk
+        ChunkLoaderFeature.ClaimResult result = chunkLoader.claimChunk(p, origin.getChunk());
+        
+        // Show feedback
+        if (cfg.chunkLoaderShowClaimMessage()) {
+            if (result.isSuccess()) {
+                int current = chunkLoader.getClaimedCount(p);
+                int max = chunkLoader.getMaxChunks();
+                String msg = cfg.chunkLoaderClaimMessage()
+                    .replace("{current}", String.valueOf(current))
+                    .replace("{max}", String.valueOf(max));
+                actionBar.showTimed(p, msg, 60);
+            } else if (result == ChunkLoaderFeature.ClaimResult.AT_LIMIT) {
+                // Only notify if they hit the limit (don't spam for already claimed)
+                actionBar.showTimed(p, result.getMessage(), 40);
+            }
+        }
     }
 
     // ==================== UTILITY METHODS ====================

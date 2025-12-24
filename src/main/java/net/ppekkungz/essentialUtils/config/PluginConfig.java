@@ -64,6 +64,23 @@ public class PluginConfig {
         return c.getBoolean("modules.autoFarm.autoReplant", true); 
     }
 
+    // Chunk Loader
+    public boolean chunkLoaderEnabled() { 
+        return c.getBoolean("modules.chunkLoader.enabled", true); 
+    }
+    public void setChunkLoaderEnabled(boolean enabled) {
+        c.set("modules.chunkLoader.enabled", enabled);
+    }
+    public int chunkLoaderMaxChunksPerPlayer() { 
+        return c.getInt("modules.chunkLoader.maxChunksPerPlayer", 9); 
+    }
+    public int chunkLoaderValidationInterval() { 
+        return c.getInt("modules.chunkLoader.validationInterval", 300); 
+    }
+    public boolean chunkLoaderClaimOnFarm() { 
+        return c.getBoolean("modules.chunkLoader.claimOnFarm", true); 
+    }
+
     // ==================== ACTIONBAR ====================
     
     // Tree Feller ActionBar
@@ -91,6 +108,40 @@ public class PluginConfig {
     public String veinMinerSummaryFormat() { 
         return colorize(c.getString("actionbar.veinMiner.summaryFormat", 
             "&b⛏ &ex{count} {ore} &7| &f{drops} &7({mult}) &7| &a{xp} XP")); 
+    }
+
+    // Chunk Loader ActionBar
+    public boolean chunkLoaderShowClaimMessage() { 
+        return c.getBoolean("actionbar.chunkLoader.showClaimMessage", true); 
+    }
+    public String chunkLoaderClaimMessage() { 
+        return colorize(c.getString("actionbar.chunkLoader.claimMessage", 
+            "&a📦 Chunk claimed! &7({current}/{max})")); 
+    }
+    public String chunkLoaderUnclaimMessage() { 
+        return colorize(c.getString("actionbar.chunkLoader.unclaimMessage", 
+            "&e📦 Chunk unclaimed.")); 
+    }
+
+    // ==================== TAB MENU ====================
+    
+    public boolean tabMenuEnabled() { 
+        return c.getBoolean("tabMenu.enabled", true); 
+    }
+    public void setTabMenuEnabled(boolean enabled) {
+        c.set("tabMenu.enabled", enabled);
+    }
+    public String tabMenuServerIp() { 
+        return c.getString("tabMenu.serverIp", "play.cidercollective.net"); 
+    }
+    public int tabMenuUpdateInterval() { 
+        return c.getInt("tabMenu.updateInterval", 4); 
+    }
+    public boolean tabMenuShowMemory() { 
+        return c.getBoolean("tabMenu.showMemory", false); 
+    }
+    public boolean tabMenuShowChunkInfo() { 
+        return c.getBoolean("tabMenu.showChunkInfo", true); 
     }
 
     // ==================== PERFORMANCE ====================

@@ -1,5 +1,5 @@
 name: EssentialUtils
-description: Folia-compatible survival utilities - Tree Feller, Vein Miner, Auto Farm
+description: Folia-compatible survival utilities - Tree Feller, Vein Miner, Auto Farm, Chunk Loader
 authors: [ "@cryptofyre", "@PPekKunGzDev" ]
 website: https://cryptofy.re
 main: net.ppekkungz.essentialUtils.EssentialUtils
@@ -24,3 +24,9 @@ permissions:
   essentialutils.autofarm:
     description: Allows using Auto Farm
     default: true
+  essentialutils.chunkloader:
+    description: Allows using Chunk Loader to claim farm chunks
+    default: true
+  essentialutils.chunkloader.bypass:
+    description: Bypass chunk loader limits
+    default: op
